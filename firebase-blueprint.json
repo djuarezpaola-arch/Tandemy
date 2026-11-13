@@ -1,0 +1,292 @@
+{
+  "entities": {
+    "Profile": {
+      "title": "Profile",
+      "description": "Public profile for a Tandemy student or PyME without sensitive PII.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "role": { "type": "string", "enum": ["student", "pyme"] },
+        "displayName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "photoUrl": { "type": "string", "maxLength": 60000 },
+        "university": { "type": "string", "maxLength": 120 },
+        "degree": { "type": "string", "maxLength": 120 },
+        "semester": { "type": "string", "maxLength": 40 },
+        "bio": { "type": "string", "maxLength": 1500 },
+        "skills": { "type": "array" },
+        "experience": { "type": "string", "maxLength": 1500 },
+        "companyName": { "type": "string", "maxLength": 120 },
+        "businessType": { "type": "string", "maxLength": 120 },
+        "companyDescription": { "type": "string", "maxLength": 1500 },
+        "city": { "type": "string", "maxLength": 120 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "role", "displayName", "createdAt", "updatedAt"]
+    },
+    "PrivateAccount": {
+      "title": "PrivateAccount",
+      "description": "Owner-only PII record containing email, phone, RFC, and student registration number.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "role": { "type": "string", "enum": ["student", "pyme"] },
+        "email": { "type": "string", "minLength": 3, "maxLength": 160 },
+        "phone": { "type": "string", "maxLength": 40 },
+        "rfc": { "type": "string", "maxLength": 20 },
+        "studentNumber": { "type": "string", "maxLength": 40 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "role", "email", "createdAt", "updatedAt"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "Project published by a PyME for FCA UACH students.",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "companyName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "companySector": { "type": "string", "maxLength": 120 },
+        "title": { "type": "string", "minLength": 3, "maxLength": 140 },
+        "description": { "type": "string", "minLength": 5, "maxLength": 3000 },
+        "area": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "activities": { "type": "string", "minLength": 3, "maxLength": 2000 },
+        "requiredSkills": { "type": "array" },
+        "targetDegrees": { "type": "array" },
+        "budget": { "type": "number" },
+        "duration": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "deadline": { "type": "string", "minLength": 4, "maxLength": 30 },
+        "status": { "type": "string", "enum": ["open", "in_progress", "completed", "closed"] },
+        "selectedApplicationId": { "type": "string", "maxLength": 128 },
+        "selectedStudentId": { "type": "string", "maxLength": 128 },
+        "selectedStudentName": { "type": "string", "maxLength": 120 },
+        "studentConfirmedComplete": { "type": "boolean" },
+        "pymeConfirmedComplete": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "ownerId",
+        "companyName",
+        "title",
+        "description",
+        "area",
+        "activities",
+        "requiredSkills",
+        "targetDegrees",
+        "budget",
+        "duration",
+        "deadline",
+        "status",
+        "studentConfirmedComplete",
+        "pymeConfirmedComplete",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Application": {
+      "title": "Application",
+      "description": "Student proposal submitted to an open PyME project.",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "projectTitle": { "type": "string", "minLength": 2, "maxLength": 140 },
+        "pymeId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "companyName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "studentId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "studentName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "studentDegree": { "type": "string", "maxLength": 120 },
+        "studentSemester": { "type": "string", "maxLength": 40 },
+        "studentSkills": { "type": "array" },
+        "proposedAmount": { "type": "number" },
+        "proposedDuration": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "coverLetter": { "type": "string", "minLength": 5, "maxLength": 2000 },
+        "status": { "type": "string", "enum": ["pending", "accepted", "rejected"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "projectId",
+        "projectTitle",
+        "pymeId",
+        "companyName",
+        "studentId",
+        "studentName",
+        "proposedAmount",
+        "proposedDuration",
+        "coverLetter",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "Simulated escrow payment record linking PyME, student, and project.",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "projectTitle": { "type": "string", "minLength": 2, "maxLength": 140 },
+        "pymeId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "companyName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "studentId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "studentName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "amount": { "type": "number" },
+        "platformFee": { "type": "number" },
+        "studentNetAmount": { "type": "number" },
+        "paymentMethod": { "type": "string", "maxLength": 80 },
+        "referenceCode": { "type": "string", "maxLength": 60 },
+        "status": { "type": "string", "enum": ["pending", "paid", "pending_release", "released", "cancelled"] },
+        "paidAt": { "type": "string", "format": "date-time" },
+        "releasedAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "projectId",
+        "projectTitle",
+        "pymeId",
+        "companyName",
+        "studentId",
+        "studentName",
+        "amount",
+        "platformFee",
+        "studentNetAmount",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Certificate": {
+      "title": "Certificate",
+      "description": "Digital completion certificate automatically generated when both parties confirm completion.",
+      "type": "object",
+      "properties": {
+        "certificateCode": { "type": "string", "minLength": 4, "maxLength": 60 },
+        "projectId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "projectTitle": { "type": "string", "minLength": 2, "maxLength": 140 },
+        "activitiesSummary": { "type": "string", "minLength": 3, "maxLength": 2000 },
+        "studentId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "studentName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "studentDegree": { "type": "string", "maxLength": 120 },
+        "studentUniversity": { "type": "string", "maxLength": 120 },
+        "pymeId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "companyName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "completedAt": { "type": "string", "maxLength": 40 },
+        "issuedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "certificateCode",
+        "projectId",
+        "projectTitle",
+        "activitiesSummary",
+        "studentId",
+        "studentName",
+        "pymeId",
+        "companyName",
+        "completedAt",
+        "issuedAt"
+      ]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "Rating and review left between student and PyME after completing a project.",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "projectTitle": { "type": "string", "minLength": 2, "maxLength": 140 },
+        "reviewerId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "reviewerName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "reviewerRole": { "type": "string", "enum": ["student", "pyme"] },
+        "revieweeId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "revieweeName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "rating": { "type": "number" },
+        "comment": { "type": "string", "minLength": 2, "maxLength": 1000 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "projectId",
+        "projectTitle",
+        "reviewerId",
+        "reviewerName",
+        "reviewerRole",
+        "revieweeId",
+        "revieweeName",
+        "rating",
+        "comment",
+        "createdAt"
+      ]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "In-app notification delivered to a student or PyME.",
+      "type": "object",
+      "properties": {
+        "recipientId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "senderId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "type": { "type": "string", "maxLength": 60 },
+        "title": { "type": "string", "minLength": 2, "maxLength": 140 },
+        "body": { "type": "string", "minLength": 2, "maxLength": 500 },
+        "linkPath": { "type": "string", "maxLength": 120 },
+        "relatedProjectId": { "type": "string", "maxLength": 128 },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["recipientId", "senderId", "type", "title", "body", "read", "createdAt"]
+    },
+    "ProjectMessage": {
+      "title": "ProjectMessage",
+      "description": "Direct project communication message between PyME and selected student.",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "senderId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "senderName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "senderRole": { "type": "string", "enum": ["student", "pyme"] },
+        "recipientId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "body": { "type": "string", "minLength": 1, "maxLength": 1500 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["projectId", "senderId", "senderName", "senderRole", "recipientId", "body", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/profiles/{profileId}": {
+      "schema": { "$ref": "#/entities/Profile" },
+      "description": "Non-PII public profile documents for students and PyMEs."
+    },
+    "/privateAccounts/{accountId}": {
+      "schema": { "$ref": "#/entities/PrivateAccount" },
+      "description": "Owner-only PII documents storing email, phone, RFC, and student number."
+    },
+    "/projects/{projectId}": {
+      "schema": { "$ref": "#/entities/Project" },
+      "description": "Projects published by PyMEs."
+    },
+    "/applications/{applicationId}": {
+      "schema": { "$ref": "#/entities/Application" },
+      "description": "Student proposals submitted to projects."
+    },
+    "/payments/{paymentId}": {
+      "schema": { "$ref": "#/entities/Payment" },
+      "description": "Simulated payment records with escrow release lifecycle."
+    },
+    "/certificates/{certificateId}": {
+      "schema": { "$ref": "#/entities/Certificate" },
+      "description": "Completion certificates generated automatically upon dual confirmation."
+    },
+    "/reviews/{reviewId}": {
+      "schema": { "$ref": "#/entities/Review" },
+      "description": "Mutual reviews between students and PyMEs."
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/Notification" },
+      "description": "User notifications for applications, selections, payments, messages, and completions."
+    },
+    "/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/ProjectMessage" },
+      "description": "Project-scoped direct messages between PyME and assigned student."
+    }
+  }
+}

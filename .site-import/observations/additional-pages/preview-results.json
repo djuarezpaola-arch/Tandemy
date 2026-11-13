@@ -1,0 +1,35 @@
+{
+  "proyectos": {
+    "heading": "Encuentra tu próximo proyecto",
+    "images_ok": true,
+    "phone_overflow": false
+  },
+  "tienda": {
+    "heading": "Herramientas listas para tu negocio",
+    "images_ok": true,
+    "phone_overflow": false
+  },
+  "registro": {
+    "heading": "Crea tu cuenta",
+    "images_ok": true,
+    "phone_overflow": false
+  },
+  "faq": {
+    "heading": "Preguntas frecuentes",
+    "images_ok": true,
+    "phone_overflow": false
+  },
+  "contacto": {
+    "heading": "Hablemos",
+    "images_ok": true,
+    "phone_overflow": false
+  },
+  "auth": {
+    "sign_in": true,
+    "profile_trigger": true,
+    "sign_out": true,
+    "email_confirmation": "enabled; delivery not tested",
+    "social": "configured; provider roundtrip not tested"
+  },
+  "runtime_errors": []
+}

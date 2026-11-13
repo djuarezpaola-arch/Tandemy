@@ -1,0 +1,753 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isStudent() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/profiles/$(request.auth.uid))
+        && get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role == 'student';
+    }
+
+    function isPyme() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/profiles/$(request.auth.uid))
+        && get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role == 'pyme';
+    }
+
+    function isOptionalString(data, field, maxLen) {
+      return !(field in data) || data[field] == null || (data[field] is string && data[field].size() <= maxLen);
+    }
+
+    function isValidStringList(listVal, maxItems, maxItemLen) {
+      return listVal is list
+        && listVal.size() <= maxItems
+        && (listVal.size() == 0 || (listVal[0] is string && listVal[0].size() <= maxItemLen));
+    }
+
+    function isValidProfile(data) {
+      return data.keys().hasAll(['uid', 'role', 'displayName', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly([
+          'uid',
+          'role',
+          'displayName',
+          'photoUrl',
+          'university',
+          'degree',
+          'semester',
+          'bio',
+          'skills',
+          'experience',
+          'companyName',
+          'businessType',
+          'companyDescription',
+          'city',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128
+        && data.uid == request.auth.uid
+        && data.role in ['student', 'pyme']
+        && data.displayName is string && data.displayName.size() >= 2 && data.displayName.size() <= 120
+        && isOptionalString(data, 'photoUrl', 60000)
+        && isOptionalString(data, 'university', 120)
+        && isOptionalString(data, 'degree', 120)
+        && isOptionalString(data, 'semester', 40)
+        && isOptionalString(data, 'bio', 1500)
+        && (!('skills' in data) || isValidStringList(data.skills, 20, 80))
+        && isOptionalString(data, 'experience', 1500)
+        && isOptionalString(data, 'companyName', 120)
+        && isOptionalString(data, 'businessType', 120)
+        && isOptionalString(data, 'companyDescription', 1500)
+        && isOptionalString(data, 'city', 120)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidPrivateAccount(data) {
+      return data.keys().hasAll(['uid', 'role', 'email', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'role', 'email', 'phone', 'rfc', 'studentNumber', 'createdAt', 'updatedAt'])
+        && data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128
+        && data.uid == request.auth.uid
+        && data.role in ['student', 'pyme']
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 160
+        && isOptionalString(data, 'phone', 40)
+        && isOptionalString(data, 'rfc', 20)
+        && isOptionalString(data, 'studentNumber', 40)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidProject(data) {
+      return data.keys().hasAll([
+          'ownerId',
+          'companyName',
+          'title',
+          'description',
+          'area',
+          'activities',
+          'requiredSkills',
+          'targetDegrees',
+          'budget',
+          'duration',
+          'deadline',
+          'status',
+          'studentConfirmedComplete',
+          'pymeConfirmedComplete',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId',
+          'companyName',
+          'companySector',
+          'title',
+          'description',
+          'area',
+          'activities',
+          'requiredSkills',
+          'targetDegrees',
+          'budget',
+          'duration',
+          'deadline',
+          'status',
+          'selectedApplicationId',
+          'selectedStudentId',
+          'selectedStudentName',
+          'studentConfirmedComplete',
+          'pymeConfirmedComplete',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128
+        && data.companyName is string && data.companyName.size() >= 2 && data.companyName.size() <= 120
+        && isOptionalString(data, 'companySector', 120)
+        && data.title is string && data.title.size() >= 3 && data.title.size() <= 140
+        && data.description is string && data.description.size() >= 5 && data.description.size() <= 3000
+        && data.area is string && data.area.size() >= 2 && data.area.size() <= 80
+        && data.activities is string && data.activities.size() >= 3 && data.activities.size() <= 2000
+        && isValidStringList(data.requiredSkills, 15, 80)
+        && isValidStringList(data.targetDegrees, 6, 120)
+        && data.budget is number && data.budget > 0 && data.budget <= 10000000
+        && data.duration is string && data.duration.size() >= 1 && data.duration.size() <= 60
+        && data.deadline is string && data.deadline.size() >= 4 && data.deadline.size() <= 30
+        && data.status in ['open', 'in_progress', 'completed', 'closed']
+        && isOptionalString(data, 'selectedApplicationId', 128)
+        && isOptionalString(data, 'selectedStudentId', 128)
+        && isOptionalString(data, 'selectedStudentName', 120)
+        && data.studentConfirmedComplete is bool
+        && data.pymeConfirmedComplete is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidApplication(data) {
+      return data.keys().hasAll([
+          'projectId',
+          'projectTitle',
+          'pymeId',
+          'companyName',
+          'studentId',
+          'studentName',
+          'proposedAmount',
+          'proposedDuration',
+          'coverLetter',
+          'status',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'projectId',
+          'projectTitle',
+          'pymeId',
+          'companyName',
+          'studentId',
+          'studentName',
+          'studentDegree',
+          'studentSemester',
+          'studentSkills',
+          'proposedAmount',
+          'proposedDuration',
+          'coverLetter',
+          'status',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.projectId is string && data.projectId.size() >= 1 && data.projectId.size() <= 128
+        && data.projectTitle is string && data.projectTitle.size() >= 2 && data.projectTitle.size() <= 140
+        && data.pymeId is string && data.pymeId.size() >= 1 && data.pymeId.size() <= 128
+        && data.companyName is string && data.companyName.size() >= 2 && data.companyName.size() <= 120
+        && data.studentId is string && data.studentId.size() >= 1 && data.studentId.size() <= 128
+        && data.studentName is string && data.studentName.size() >= 2 && data.studentName.size() <= 120
+        && isOptionalString(data, 'studentDegree', 120)
+        && isOptionalString(data, 'studentSemester', 40)
+        && (!('studentSkills' in data) || isValidStringList(data.studentSkills, 20, 80))
+        && data.proposedAmount is number && data.proposedAmount > 0 && data.proposedAmount <= 10000000
+        && data.proposedDuration is string && data.proposedDuration.size() >= 1 && data.proposedDuration.size() <= 60
+        && data.coverLetter is string && data.coverLetter.size() >= 5 && data.coverLetter.size() <= 2000
+        && data.status in ['pending', 'accepted', 'rejected']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidPayment(data) {
+      return data.keys().hasAll([
+          'projectId',
+          'projectTitle',
+          'pymeId',
+          'companyName',
+          'studentId',
+          'studentName',
+          'amount',
+          'platformFee',
+          'studentNetAmount',
+          'status',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'projectId',
+          'projectTitle',
+          'pymeId',
+          'companyName',
+          'studentId',
+          'studentName',
+          'amount',
+          'platformFee',
+          'studentNetAmount',
+          'paymentMethod',
+          'referenceCode',
+          'status',
+          'paidAt',
+          'releasedAt',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.projectId is string && data.projectId.size() >= 1 && data.projectId.size() <= 128
+        && data.projectTitle is string && data.projectTitle.size() >= 2 && data.projectTitle.size() <= 140
+        && data.pymeId is string && data.pymeId.size() >= 1 && data.pymeId.size() <= 128
+        && data.companyName is string && data.companyName.size() >= 2 && data.companyName.size() <= 120
+        && data.studentId is string && data.studentId.size() >= 1 && data.studentId.size() <= 128
+        && data.studentName is string && data.studentName.size() >= 2 && data.studentName.size() <= 120
+        && data.amount is number && data.amount > 0 && data.amount <= 10000000
+        && data.platformFee is number && data.platformFee >= 0 && data.platformFee <= data.amount
+        && data.studentNetAmount is number && data.studentNetAmount >= 0 && data.studentNetAmount <= data.amount
+        && isOptionalString(data, 'paymentMethod', 80)
+        && isOptionalString(data, 'referenceCode', 60)
+        && data.status in ['pending', 'paid', 'pending_release', 'released', 'cancelled']
+        && (!('paidAt' in data) || data.paidAt == null || data.paidAt is timestamp)
+        && (!('releasedAt' in data) || data.releasedAt == null || data.releasedAt is timestamp)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidCertificate(data) {
+      return data.keys().hasAll([
+          'certificateCode',
+          'projectId',
+          'projectTitle',
+          'activitiesSummary',
+          'studentId',
+          'studentName',
+          'pymeId',
+          'companyName',
+          'completedAt',
+          'issuedAt'
+        ])
+        && data.keys().hasOnly([
+          'certificateCode',
+          'projectId',
+          'projectTitle',
+          'activitiesSummary',
+          'studentId',
+          'studentName',
+          'studentDegree',
+          'studentUniversity',
+          'pymeId',
+          'companyName',
+          'completedAt',
+          'issuedAt'
+        ])
+        && data.certificateCode is string && data.certificateCode.size() >= 4 && data.certificateCode.size() <= 60
+        && data.projectId is string && data.projectId.size() >= 1 && data.projectId.size() <= 128
+        && data.projectTitle is string && data.projectTitle.size() >= 2 && data.projectTitle.size() <= 140
+        && data.activitiesSummary is string && data.activitiesSummary.size() >= 3 && data.activitiesSummary.size() <= 2000
+        && data.studentId is string && data.studentId.size() >= 1 && data.studentId.size() <= 128
+        && data.studentName is string && data.studentName.size() >= 2 && data.studentName.size() <= 120
+        && isOptionalString(data, 'studentDegree', 120)
+        && isOptionalString(data, 'studentUniversity', 120)
+        && data.pymeId is string && data.pymeId.size() >= 1 && data.pymeId.size() <= 128
+        && data.companyName is string && data.companyName.size() >= 2 && data.companyName.size() <= 120
+        && data.completedAt is string && data.completedAt.size() >= 4 && data.completedAt.size() <= 40
+        && data.issuedAt is timestamp;
+    }
+
+    function isValidReview(data) {
+      return data.keys().hasAll([
+          'projectId',
+          'projectTitle',
+          'reviewerId',
+          'reviewerName',
+          'reviewerRole',
+          'revieweeId',
+          'revieweeName',
+          'rating',
+          'comment',
+          'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'projectId',
+          'projectTitle',
+          'reviewerId',
+          'reviewerName',
+          'reviewerRole',
+          'revieweeId',
+          'revieweeName',
+          'rating',
+          'comment',
+          'createdAt'
+        ])
+        && data.projectId is string && data.projectId.size() >= 1 && data.projectId.size() <= 128
+        && data.projectTitle is string && data.projectTitle.size() >= 2 && data.projectTitle.size() <= 140
+        && data.reviewerId is string && data.reviewerId.size() >= 1 && data.reviewerId.size() <= 128
+        && data.reviewerName is string && data.reviewerName.size() >= 2 && data.reviewerName.size() <= 120
+        && data.reviewerRole in ['student', 'pyme']
+        && data.revieweeId is string && data.revieweeId.size() >= 1 && data.revieweeId.size() <= 128
+        && data.revieweeName is string && data.revieweeName.size() >= 2 && data.revieweeName.size() <= 120
+        && data.rating is number && data.rating >= 1 && data.rating <= 5
+        && data.comment is string && data.comment.size() >= 2 && data.comment.size() <= 1000
+        && data.createdAt is timestamp;
+    }
+
+    function isValidNotification(data) {
+      return data.keys().hasAll(['recipientId', 'senderId', 'type', 'title', 'body', 'read', 'createdAt'])
+        && data.keys().hasOnly([
+          'recipientId',
+          'senderId',
+          'type',
+          'title',
+          'body',
+          'linkPath',
+          'relatedProjectId',
+          'read',
+          'createdAt'
+        ])
+        && data.recipientId is string && data.recipientId.size() >= 1 && data.recipientId.size() <= 128
+        && data.senderId is string && data.senderId.size() >= 1 && data.senderId.size() <= 128
+        && data.type is string && data.type.size() >= 1 && data.type.size() <= 60
+        && data.title is string && data.title.size() >= 2 && data.title.size() <= 140
+        && data.body is string && data.body.size() >= 2 && data.body.size() <= 500
+        && isOptionalString(data, 'linkPath', 120)
+        && isOptionalString(data, 'relatedProjectId', 128)
+        && data.read is bool
+        && data.createdAt is timestamp;
+    }
+
+    function isValidMessage(data) {
+      return data.keys().hasAll([
+          'projectId',
+          'senderId',
+          'senderName',
+          'senderRole',
+          'recipientId',
+          'body',
+          'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'projectId',
+          'senderId',
+          'senderName',
+          'senderRole',
+          'recipientId',
+          'body',
+          'createdAt'
+        ])
+        && data.projectId is string && data.projectId.size() >= 1 && data.projectId.size() <= 128
+        && data.senderId is string && data.senderId.size() >= 1 && data.senderId.size() <= 128
+        && data.senderName is string && data.senderName.size() >= 2 && data.senderName.size() <= 120
+        && data.senderRole in ['student', 'pyme']
+        && data.recipientId is string && data.recipientId.size() >= 1 && data.recipientId.size() <= 128
+        && data.body is string && data.body.size() >= 1 && data.body.size() <= 1500
+        && data.createdAt is timestamp;
+    }
+
+    match /profiles/{profileId} {
+      allow get: if isValidId(profileId);
+      allow list: if true;
+      allow create: if isSignedIn()
+        && isValidId(profileId)
+        && profileId == request.auth.uid
+        && isValidProfile(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isSignedIn()
+        && isValidId(profileId)
+        && profileId == request.auth.uid
+        && isValidProfile(incoming())
+        && incoming().uid == existing().uid
+        && incoming().role == existing().role
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'displayName',
+          'photoUrl',
+          'university',
+          'degree',
+          'semester',
+          'bio',
+          'skills',
+          'experience',
+          'companyName',
+          'businessType',
+          'companyDescription',
+          'city',
+          'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    match /privateAccounts/{accountId} {
+      allow get: if isSignedIn() && isValidId(accountId) && accountId == request.auth.uid;
+      allow list: if false;
+      allow create: if isSignedIn()
+        && isValidId(accountId)
+        && accountId == request.auth.uid
+        && isValidPrivateAccount(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isSignedIn()
+        && isValidId(accountId)
+        && accountId == request.auth.uid
+        && isValidPrivateAccount(incoming())
+        && incoming().uid == existing().uid
+        && incoming().role == existing().role
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'email',
+          'phone',
+          'rfc',
+          'studentNumber',
+          'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    match /projects/{projectId} {
+      allow get: if isValidId(projectId)
+        && (existing().status == 'open'
+          || (isSignedIn() && (existing().ownerId == request.auth.uid || existing().selectedStudentId == request.auth.uid)));
+      allow list: if resource.data.status == 'open'
+        || (isSignedIn() && (resource.data.ownerId == request.auth.uid || resource.data.selectedStudentId == request.auth.uid));
+      allow create: if isSignedIn()
+        && isValidId(projectId)
+        && isPyme()
+        && isValidProject(incoming())
+        && incoming().ownerId == request.auth.uid
+        && incoming().status == 'open'
+        && (!('selectedApplicationId' in incoming()) || incoming().selectedApplicationId == null)
+        && (!('selectedStudentId' in incoming()) || incoming().selectedStudentId == null)
+        && (!('selectedStudentName' in incoming()) || incoming().selectedStudentName == null)
+        && incoming().studentConfirmedComplete == false
+        && incoming().pymeConfirmedComplete == false
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isSignedIn()
+        && isValidId(projectId)
+        && isValidProject(incoming())
+        && existing().status != 'completed'
+        && existing().status != 'closed'
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          (
+            existing().ownerId == request.auth.uid
+            && existing().status == 'open'
+            && incoming().status == 'open'
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'title',
+              'description',
+              'area',
+              'activities',
+              'requiredSkills',
+              'targetDegrees',
+              'budget',
+              'duration',
+              'deadline',
+              'updatedAt'
+            ])
+          )
+          || (
+            existing().ownerId == request.auth.uid
+            && existing().status == 'open'
+            && incoming().status == 'closed'
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])
+          )
+          || (
+            existing().ownerId == request.auth.uid
+            && existing().status == 'open'
+            && incoming().status == 'in_progress'
+            && incoming().selectedApplicationId is string
+            && incoming().selectedStudentId is string
+            && incoming().selectedStudentName is string
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'status',
+              'selectedApplicationId',
+              'selectedStudentId',
+              'selectedStudentName',
+              'updatedAt'
+            ])
+          )
+          || (
+            existing().ownerId == request.auth.uid
+            && existing().status == 'in_progress'
+            && incoming().pymeConfirmedComplete == true
+            && incoming().status == (existing().studentConfirmedComplete ? 'completed' : 'in_progress')
+            && incoming().diff(existing()).affectedKeys().hasOnly(['pymeConfirmedComplete', 'status', 'updatedAt'])
+          )
+          || (
+            existing().selectedStudentId == request.auth.uid
+            && existing().status == 'in_progress'
+            && incoming().studentConfirmedComplete == true
+            && incoming().status == (existing().pymeConfirmedComplete ? 'completed' : 'in_progress')
+            && incoming().diff(existing()).affectedKeys().hasOnly(['studentConfirmedComplete', 'status', 'updatedAt'])
+          )
+        );
+      allow delete: if isSignedIn()
+        && isValidId(projectId)
+        && existing().ownerId == request.auth.uid
+        && existing().status == 'open';
+    }
+
+    match /applications/{applicationId} {
+      allow get: if isSignedIn()
+        && isValidId(applicationId)
+        && (existing().studentId == request.auth.uid || existing().pymeId == request.auth.uid);
+      allow list: if isSignedIn()
+        && (resource.data.studentId == request.auth.uid || resource.data.pymeId == request.auth.uid);
+      allow create: if isSignedIn()
+        && isValidId(applicationId)
+        && isStudent()
+        && isValidApplication(incoming())
+        && incoming().studentId == request.auth.uid
+        && incoming().status == 'pending'
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && (
+          (
+            exists(/databases/$(database)/documents/projects/$(incoming().projectId))
+            && get(/databases/$(database)/documents/projects/$(incoming().projectId)).data.status == 'open'
+            && get(/databases/$(database)/documents/projects/$(incoming().projectId)).data.ownerId == incoming().pymeId
+          )
+          || (
+            incoming().pymeId == 'demo-pyme'
+            && incoming().projectId in [
+              'demo-cafe-aroma-costos',
+              'demo-boutique-luna-redes',
+              'demo-moda-norte-procesos',
+              'demo-taller-perez-tramites',
+              'demo-don-chuy-tablero',
+              'demo-raramuri-exportacion',
+              'demo-cafe-aroma-resico'
+            ]
+          )
+        );
+      allow update: if isSignedIn()
+        && isValidId(applicationId)
+        && isValidApplication(incoming())
+        && existing().status == 'pending'
+        && existing().pymeId == request.auth.uid
+        && incoming().studentId == existing().studentId
+        && incoming().pymeId == existing().pymeId
+        && incoming().projectId == existing().projectId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (incoming().status == 'accepted' || incoming().status == 'rejected')
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']);
+      allow delete: if isSignedIn()
+        && isValidId(applicationId)
+        && existing().studentId == request.auth.uid
+        && existing().status == 'pending';
+    }
+
+    match /payments/{paymentId} {
+      allow get: if isSignedIn()
+        && isValidId(paymentId)
+        && (existing().pymeId == request.auth.uid || existing().studentId == request.auth.uid);
+      allow list: if isSignedIn()
+        && (resource.data.pymeId == request.auth.uid || resource.data.studentId == request.auth.uid);
+      allow create: if isSignedIn()
+        && isValidId(paymentId)
+        && isPyme()
+        && isValidPayment(incoming())
+        && incoming().pymeId == request.auth.uid
+        && incoming().status == 'pending'
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && exists(/databases/$(database)/documents/projects/$(incoming().projectId))
+        && get(/databases/$(database)/documents/projects/$(incoming().projectId)).data.ownerId == request.auth.uid;
+      allow update: if isSignedIn()
+        && isValidId(paymentId)
+        && isValidPayment(incoming())
+        && existing().status != 'released'
+        && existing().status != 'cancelled'
+        && incoming().projectId == existing().projectId
+        && incoming().pymeId == existing().pymeId
+        && incoming().studentId == existing().studentId
+        && incoming().amount == existing().amount
+        && incoming().platformFee == existing().platformFee
+        && incoming().studentNetAmount == existing().studentNetAmount
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          (
+            existing().pymeId == request.auth.uid
+            && existing().status == 'pending'
+            && (
+              (
+                (incoming().status == 'pending_release' || incoming().status == 'paid')
+                && (!('releasedAt' in incoming()) || incoming().releasedAt == null)
+              )
+              || (
+                incoming().status == 'released'
+                && incoming().releasedAt == request.time
+                && get(/databases/$(database)/documents/projects/$(existing().projectId)).data.status == 'completed'
+              )
+            )
+            && incoming().paymentMethod is string && incoming().paymentMethod.size() >= 2
+            && incoming().referenceCode is string && incoming().referenceCode.size() >= 4
+            && incoming().paidAt == request.time
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'status',
+              'paymentMethod',
+              'referenceCode',
+              'paidAt',
+              'releasedAt',
+              'updatedAt'
+            ])
+          )
+          || (
+            (existing().pymeId == request.auth.uid || existing().studentId == request.auth.uid)
+            && (existing().status == 'pending_release' || existing().status == 'paid')
+            && incoming().status == 'released'
+            && incoming().releasedAt == request.time
+            && getAfter(/databases/$(database)/documents/projects/$(existing().projectId)).data.status == 'completed'
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'releasedAt', 'updatedAt'])
+          )
+          || (
+            existing().pymeId == request.auth.uid
+            && existing().status == 'pending'
+            && incoming().status == 'cancelled'
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])
+          )
+        );
+      allow delete: if false;
+    }
+
+    match /certificates/{certificateId} {
+      allow get: if isSignedIn()
+        && isValidId(certificateId)
+        && (existing().studentId == request.auth.uid || existing().pymeId == request.auth.uid);
+      allow list: if isSignedIn()
+        && (resource.data.studentId == request.auth.uid || resource.data.pymeId == request.auth.uid);
+      allow create: if isSignedIn()
+        && isValidId(certificateId)
+        && isValidCertificate(incoming())
+        && certificateId == incoming().projectId
+        && (incoming().studentId == request.auth.uid || incoming().pymeId == request.auth.uid)
+        && getAfter(/databases/$(database)/documents/projects/$(incoming().projectId)).data.status == 'completed'
+        && incoming().issuedAt == request.time;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    match /reviews/{reviewId} {
+      allow get: if isValidId(reviewId);
+      allow list: if true;
+      allow create: if isSignedIn()
+        && isValidId(reviewId)
+        && isValidReview(incoming())
+        && incoming().reviewerId == request.auth.uid
+        && incoming().createdAt == request.time
+        && exists(/databases/$(database)/documents/projects/$(incoming().projectId))
+        && get(/databases/$(database)/documents/projects/$(incoming().projectId)).data.status == 'completed'
+        && (
+          (
+            get(/databases/$(database)/documents/projects/$(incoming().projectId)).data.ownerId == request.auth.uid
+            && get(/databases/$(database)/documents/projects/$(incoming().projectId)).data.selectedStudentId == incoming().revieweeId
+            && incoming().reviewerRole == 'pyme'
+          )
+          || (
+            get(/databases/$(database)/documents/projects/$(incoming().projectId)).data.selectedStudentId == request.auth.uid
+            && get(/databases/$(database)/documents/projects/$(incoming().projectId)).data.ownerId == incoming().revieweeId
+            && incoming().reviewerRole == 'student'
+          )
+        );
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    match /notifications/{notificationId} {
+      allow get: if isSignedIn()
+        && isValidId(notificationId)
+        && existing().recipientId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.recipientId == request.auth.uid;
+      allow create: if isSignedIn()
+        && isValidId(notificationId)
+        && isValidNotification(incoming())
+        && incoming().senderId == request.auth.uid
+        && incoming().read == false
+        && incoming().createdAt == request.time;
+      allow update: if isSignedIn()
+        && isValidId(notificationId)
+        && existing().recipientId == request.auth.uid
+        && isValidNotification(incoming())
+        && incoming().recipientId == existing().recipientId
+        && incoming().senderId == existing().senderId
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['read']);
+      allow delete: if isSignedIn()
+        && isValidId(notificationId)
+        && existing().recipientId == request.auth.uid;
+    }
+
+    match /messages/{messageId} {
+      allow get: if isSignedIn()
+        && isValidId(messageId)
+        && (existing().senderId == request.auth.uid || existing().recipientId == request.auth.uid);
+      allow list: if isSignedIn()
+        && (resource.data.senderId == request.auth.uid || resource.data.recipientId == request.auth.uid);
+      allow create: if isSignedIn()
+        && isValidId(messageId)
+        && isValidMessage(incoming())
+        && incoming().senderId == request.auth.uid
+        && incoming().createdAt == request.time
+        && exists(/databases/$(database)/documents/projects/$(incoming().projectId))
+        && (
+          get(/databases/$(database)/documents/projects/$(incoming().projectId)).data.ownerId == request.auth.uid
+          || get(/databases/$(database)/documents/projects/$(incoming().projectId)).data.selectedStudentId == request.auth.uid
+        );
+      allow update: if false;
+      allow delete: if false;
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1794520688674,
+      "tag": "0000_create_student_profiles",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794522937668,
+      "tag": "0001_accounts_projects_applications_reviews",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794522968863,
+      "tag": "0002_protect_application_fields",
+      "breakpoints": true
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "name": "Tandemy",
+  "description": "Estudiantes FCA UACH y PyMEs de Chihuahua conectados por proyectos reales.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

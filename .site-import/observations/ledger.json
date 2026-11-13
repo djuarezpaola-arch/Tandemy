@@ -1,0 +1,178 @@
+{
+ "route": "/",
+ "source": "https://talento-fca-conecta.lovable.app/",
+ "source_observations": [
+  {
+   "control": "privacy notice",
+   "trigger": "first visit (no tandemy-priv in localStorage)",
+   "observed": "centered 'Aviso de privacidad' dialog; Acepto/close set tandemy-priv=1",
+   "screenshots": [
+    "source/desk_1_load.png",
+    "source/phone_1_load.png"
+   ]
+  },
+  {
+   "control": "cart button",
+   "trigger": "header cart '0'",
+   "observed": "right sheet 'Tu carrito' with empty state and 'Ver la tienda' -> /tienda",
+   "artifacts": [
+    "source/desk_cart.html",
+    "source/desk_3_cart.png",
+    "source/phone_3_cart.png"
+   ]
+  },
+  {
+   "control": "phone menu",
+   "viewport": "390x844",
+   "trigger": "Menú button",
+   "observed": "inline nav under header with 7 links, icon becomes X",
+   "artifacts": [
+    "source/phone_menu_header.html",
+    "source/phone_2_menu.png"
+   ]
+  },
+  {
+   "control": "footer Aviso de privacidad",
+   "observed": "reopens privacy dialog",
+   "screenshots": [
+    "source/desk_4_priv.png"
+   ]
+  },
+  {
+   "control": "hero CTAs",
+   "observed": "/registro?tipo=estudiante and /registro?tipo=pyme (not imported)"
+  }
+ ],
+ "preview_results": [
+  {
+   "viewport": "desk",
+   "control": "privacy notice on first visit",
+   "status": "pass",
+   "note": ""
+  },
+  {
+   "viewport": "desk",
+   "control": "Acepto closes notice",
+   "status": "pass",
+   "note": "1"
+  },
+  {
+   "viewport": "desk",
+   "control": "notice stays dismissed after reload",
+   "status": "pass",
+   "note": ""
+  },
+  {
+   "viewport": "desk",
+   "control": "wheel scroll reaches bottom",
+   "status": "pass",
+   "note": "[1508, 1508]"
+  },
+  {
+   "viewport": "desk",
+   "control": "footer privacy opens & Escape closes",
+   "status": "pass",
+   "note": ""
+  },
+  {
+   "viewport": "desk",
+   "control": "cart sheet opens, shows empty state, closes",
+   "status": "pass",
+   "note": ""
+  },
+  {
+   "viewport": "desk",
+   "control": "desktop nav links on preview origin",
+   "status": "pass",
+   "note": "['/', '/proyectos', '/perfiles', '/tienda', '/faq', '/contacto']"
+  },
+  {
+   "viewport": "desk",
+   "control": "hero CTAs keep source paths",
+   "status": "pass",
+   "note": ""
+  },
+  {
+   "viewport": "desk",
+   "control": "all images load",
+   "status": "pass",
+   "note": "[]"
+  },
+  {
+   "viewport": "desk",
+   "control": "no page errors",
+   "status": "pass",
+   "note": "[]"
+  },
+  {
+   "viewport": "phone",
+   "control": "privacy notice on first visit",
+   "status": "pass",
+   "note": ""
+  },
+  {
+   "viewport": "phone",
+   "control": "Acepto closes notice",
+   "status": "pass",
+   "note": "1"
+  },
+  {
+   "viewport": "phone",
+   "control": "notice stays dismissed after reload",
+   "status": "pass",
+   "note": ""
+  },
+  {
+   "viewport": "phone",
+   "control": "wheel scroll reaches bottom",
+   "status": "pass",
+   "note": "[6584, 6584]"
+  },
+  {
+   "viewport": "phone",
+   "control": "footer privacy opens & Escape closes",
+   "status": "pass",
+   "note": ""
+  },
+  {
+   "viewport": "phone",
+   "control": "cart sheet opens, shows empty state, closes",
+   "status": "pass",
+   "note": ""
+  },
+  {
+   "viewport": "phone",
+   "control": "phone menu opens with 7 links",
+   "status": "pass",
+   "note": "['Inicio', 'Proyectos', 'Perfiles', 'Tienda', 'Preguntas', 'Contacto', 'Crear cuenta']"
+  },
+  {
+   "viewport": "phone",
+   "control": "phone menu closes",
+   "status": "pass",
+   "note": ""
+  },
+  {
+   "viewport": "phone",
+   "control": "hero CTAs keep source paths",
+   "status": "pass",
+   "note": ""
+  },
+  {
+   "viewport": "phone",
+   "control": "all images load",
+   "status": "pass",
+   "note": "[]"
+  },
+  {
+   "viewport": "phone",
+   "control": "no page errors",
+   "status": "pass",
+   "note": "[]"
+  }
+ ],
+ "notes": [
+  "Lovable 'Edit with' badge from source hosting removed",
+  "No video, canvas, carousel or scroll motion on this page"
+ ]
+}
